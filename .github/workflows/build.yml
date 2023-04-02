@@ -1,0 +1,45 @@
+name: Create Ubuntu Minimal ISO Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y debootstrap genisoimage
+
+    - name: Create chroot environment
+      run: |
+        mkdir chroot
+        sudo debootstrap --variant=minbase focal chroot
+
+    - name: Configure chroot environment
+      run: |
+        echo 'nameserver 8.8.8.8' | sudo tee chroot/etc/resolv.conf > /dev/null
+        sudo chroot chroot apt-get update
+        sudo chroot chroot apt-get install -y --no-install-recommends linux-image-generic grub-pc-bin
+
+    - name: Configure grub
+      run: |
+        sudo sed -i 's/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/' chroot/etc/default/grub
+        sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0,115200"/' chroot/etc/default/grub
+        sudo chroot chroot update-grub
+
+    - name: Build ISO image
+      run: |
+        sudo mkdir iso
+        sudo cp chroot/boot/vmlinuz* chroot/boot/initrd.img* iso
+        sudo grub-mkrescue -o ubuntu-minimal.iso iso
+
+    - name: Upload ISO artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ubuntu-minimal.iso
+        path: ubuntu-minimal.iso
