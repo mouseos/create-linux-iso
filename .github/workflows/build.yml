@@ -1,43 +1,21 @@
-name: Build Ubuntu Minimal ISO
-
-on:
-  push:
-    branches:
-      - main
-
 jobs:
-  build_iso:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y install debootstrap xorriso isolinux
-      
-      - name: Build minimal Ubuntu
-        run: |
-          sudo debootstrap --variant=minbase focal ubuntu-minimal
-          sudo chroot ubuntu-minimal apt-get update
-          sudo chroot ubuntu-minimal apt-get -y install openssh-server
-          sudo chroot ubuntu-minimal apt-get clean
-          sudo rm -rf ubuntu-minimal/var/lib/apt/lists/*
-      
-      - name: Create ISO
+      - name: Install debootstrap and xorriso
+        run: sudo apt-get update && sudo apt-get install -y debootstrap xorriso
+      - name: Create minimal Ubuntu ISO
         run: |
           mkdir iso
-          cp -r ubuntu-minimal/* iso/
-          cp /usr/lib/ISOLINUX/isolinux.bin iso/
-          cp /usr/lib/syslinux/modules/bios/ldlinux.c32 iso/
-          cp /usr/lib/syslinux/modules/bios/libutil.c32 iso/
-          cp /usr/share/misc/pci.ids iso/
+          sudo cp -a ubuntu-minimal/* iso/
+          sudo cp /usr/lib/ISOLINUX/isolinux.bin iso/
+          sudo cp /usr/lib/syslinux/modules/bios/ldlinux.c32 iso/
+          sudo cp /usr/lib/syslinux/modules/bios/libutil.c32 iso/
+          sudo cp /usr/share/misc/pci.ids iso/
           cd iso
-          mv isolinux.cfg syslinux.cfg
-          sed -i 's|isolinux.cfg|syslinux.cfg|g' syslinux.cfg
-          xorriso -as mkisofs -r -checksum_algorithm_iso md5,sha1,sha256,sha512 -o ../ubuntu-minimal.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .
-
-      - name: Upload ISO artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ubuntu-minimal.iso
-          path: ubuntu-minimal.iso
+          sudo mv isolinux.cfg syslinux.cfg
+          sudo sed -i 's|isolinux.cfg|syslinux.cfg|g' syslinux.cfg
+          sudo xorriso -as mkisofs -r -checksum_algorithm_iso md5,sha1,sha256,sha512 -o ../ubuntu-minimal.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .
+        shell: /usr/bin/bash -e {0}
