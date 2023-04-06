@@ -12,6 +12,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y mmdebstrap xorriso
       - name: Create minimal Ubuntu ISO
         run: |
+          sudo su
           mkdir rootfs
           cd rootfs
           mmdebstrap --variant=apt \
