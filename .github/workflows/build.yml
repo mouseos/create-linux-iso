@@ -8,10 +8,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install debootstrap and xorriso
-        run: sudo apt-get update && sudo apt-get install -y debootstrap xorriso
+      - name: Install mmdebstrap and xorriso
+        run: sudo apt-get update && sudo apt-get install -y mmdebstrap xorriso
       - name: Create minimal Ubuntu ISO
         run: |
+          mkdir rootfs
+          cd rootfs
           mmdebstrap --variant=apt \
           --dpkgopt='path-exclude=/usr/share/man/*' \
           --dpkgopt='path-exclude=/usr/share/doc/*' \
