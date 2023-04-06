@@ -1,3 +1,7 @@
+name: Build root
+on:
+  push:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -8,14 +12,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y debootstrap xorriso
       - name: Create minimal Ubuntu ISO
         run: |
-          mkdir iso
-          sudo cp -a ubuntu-minimal/* iso/
-          sudo cp /usr/lib/ISOLINUX/isolinux.bin iso/
-          sudo cp /usr/lib/syslinux/modules/bios/ldlinux.c32 iso/
-          sudo cp /usr/lib/syslinux/modules/bios/libutil.c32 iso/
-          sudo cp /usr/share/misc/pci.ids iso/
-          cd iso
-          sudo mv isolinux.cfg syslinux.cfg
-          sudo sed -i 's|isolinux.cfg|syslinux.cfg|g' syslinux.cfg
-          sudo xorriso -as mkisofs -r -checksum_algorithm_iso md5,sha1,sha256,sha512 -o ../ubuntu-minimal.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .
-        shell: /usr/bin/bash -e {0}
+          mmdebstrap --variant=apt \
+          --dpkgopt='path-exclude=/usr/share/man/*' \
+          --dpkgopt='path-exclude=/usr/share/doc/*' \
+          --dpkgopt='path-exclude=/usr/share/locale/*' \
+          --dpkgopt='path-include=/usr/share/doc/*/copyright' \
+          --include=tree,jq \
+          buster testing http://ftp.jp.debian.org/debian/
+          ls -l
