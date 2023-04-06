@@ -20,5 +20,5 @@ jobs:
           --dpkgopt='path-exclude=/usr/share/locale/*' \
           --dpkgopt='path-include=/usr/share/doc/*/copyright' \
           --include=tree,jq \
-          jammy testing http://jp.archive.ubuntu.com/ubuntu
+          eoan eoan-rootfs http://jp.archive.ubuntu.com/ubuntu
           ls -l
