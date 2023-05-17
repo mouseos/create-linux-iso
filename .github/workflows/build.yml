@@ -1,24 +1,41 @@
-name: Build root
-on:
+name: Build ISO
+
+on: 
   push:
-  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install mmdebstrap and xorriso
-        run: sudo apt-get update && sudo apt-get install -y mmdebstrap xorriso
-      - name: Create minimal Ubuntu ISO
-        run: |
-          mkdir rootfs
-          cd rootfs
-          sudo mmdebstrap --variant=apt \
-          --dpkgopt='path-exclude=/usr/share/man/*' \
-          --dpkgopt='path-exclude=/usr/share/doc/*' \
-          --dpkgopt='path-exclude=/usr/share/locale/*' \
-          --dpkgopt='path-include=/usr/share/doc/*/copyright' \
-          --include=tree,jq \
-          eoan eoan-rootfs http://jp.archive.ubuntu.com/ubuntu
-          ls -l
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - name: Build Linux 
+      run: |
+        git clone --depth=1 https://github.com/torvalds/linux.git
+        cd linux
+        make defconfig
+        make -j$(nproc)
+
+    - name: Build Busybox
+      run: |
+        git clone --depth=1 https://github.com/busybox/busybox.git
+        cd busybox
+        make defconfig
+        make -j$(nproc)
+
+    - name: Build GRUB
+      run: |
+        git clone --depth=1 https://github.com/grub/grub.git
+        cd grub
+        ./autogen.sh
+        ./configure
+        make -j$(nproc) 
+
+    - name: Create ISO
+      run: | 
+        mkdir -p iso/boot/grub
+        cp linux/arch/x86/boot/bzImage iso/boot
+        cp busybox/busybox iso/bin
+        cp grub/grubx64.efi iso/boot/grub
+        genisoimage -output iso.iso -volid MYLINUX -joliet -rock iso/
