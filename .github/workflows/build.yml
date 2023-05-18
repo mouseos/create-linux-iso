@@ -29,7 +29,7 @@ jobs:
     - name: Build GRUB
       run: |
         git clone --depth=1 https://github.com/rhboot/grub2
-        cd grub
+        cd grub2
         ./autogen.sh
         ./configure
         make -j$(nproc) 
