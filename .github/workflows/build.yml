@@ -21,14 +21,14 @@ jobs:
 
     - name: Build Busybox
       run: |
-        git clone --depth=1 https://github.com/busybox/busybox.git
+        git clone --depth=1 https://github.com/mirror/busybox
         cd busybox
         make defconfig
         make -j$(nproc)
 
     - name: Build GRUB
       run: |
-        git clone --depth=1 https://github.com/grub/grub.git
+        git clone --depth=1 https://github.com/rhboot/grub2
         cd grub
         ./autogen.sh
         ./configure
